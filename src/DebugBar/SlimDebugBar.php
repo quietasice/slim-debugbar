@@ -24,20 +24,21 @@ class SlimDebugBar extends DebugBar
     {
         $this->addCollector(new SlimLogCollector($slim));
         $this->addCollector(new SlimEnvCollector($slim));
-        $slim->hook('slim.after.router', function() use ($slim)
+        $_that = $this;
+        $slim->hook('slim.after.router', function() use ($slim, $_that)
         {
-            $setting = $this->prepareRenderData($slim->container['settings']);
-            $data = $this->prepareRenderData($slim->view->all());
-            $this->addCollector(new SlimResponseCollector($slim->response));
-            $this->addCollector(new ConfigCollector($setting));
-            $this->addCollector(new SlimViewCollector($data));
-            $this->addCollector(new SlimRouteCollector($slim));
+            $setting = $_that->prepareRenderData($slim->container['settings']);
+            $data = $_that->prepareRenderData($slim->view->all());
+            $_that->addCollector(new SlimResponseCollector($slim->response));
+            $_that->addCollector(new ConfigCollector($setting));
+            $_that->addCollector(new SlimViewCollector($data));
+            $_that->addCollector(new SlimRouteCollector($slim));
         });
     }
 
-    protected function prepareRenderData(array $data = [])
+    public function prepareRenderData(array $data = array())
     {
-        $tmp = [];
+        $tmp = array();
         foreach ($data as $key => $val) {
             if (is_object($val)) {
                 $val = "Object (". get_class($val) .")";

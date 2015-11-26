@@ -169,30 +169,33 @@ class DebugBar extends Middleware
     protected function setAssetsRoute()
     {
         $renderer = $this->debugbar->getJavascriptRenderer();
-        $this->app->get('/_debugbar/fonts/:file', function($file) use ($renderer)
+        $app = $this->app;
+        $this->app->get('/_debugbar/fonts/:file', function($file) use ($renderer, $app)
         {
             // e.g. $file = fontawesome-webfont.woff?v=4.0.3
             $files = explode('?', $file);
             $file = reset($files);
             $path = $renderer->getBasePath() . '/vendor/font-awesome/fonts/' . $file;
             if (file_exists($path)) {
-                $this->app->response->header('Content-Type', (new \finfo(FILEINFO_MIME))->file($path));
+                $T = new \finfo(FILEINFO_MIME);
+                $app->response->header('Content-Type',$T->file($path));
                 echo file_get_contents($path);
             } else {
                 // font-awesome.css referencing fontawesome-webfont.woff2 but not include in the php-debugbar.
                 // It is not slim-debugbar bug.
-                $this->app->notFound();
+                $app->notFound();
             }
         })->name('debugbar.fonts');
-        $this->app->get('/_debugbar/resources/:file', function($file) use ($renderer)
+
+        $this->app->get('/_debugbar/resources/:file', function($file) use ($renderer, $app)
         {
             $files = explode('.', $file);
             $ext = end($files);
             if ($ext === 'css') {
-                $this->app->response->header('Content-Type', 'text/css');
+                $app->response->header('Content-Type', 'text/css');
                 $renderer->dumpCssAssets();
             } elseif ($ext === 'js') {
-                $this->app->response->header('Content-Type', 'text/javascript');
+                $app->response->header('Content-Type', 'text/javascript');
                 $renderer->dumpJsAssets();
             }
         })->name('debugbar.resources');
@@ -211,7 +214,8 @@ class DebugBar extends Middleware
 
         if ($route) {
             $name = $route->getName();
-            return (explode('.', $name)[0] === 'debugbar');
+            $T = explode('.', $name);
+            return ($T[0] === 'debugbar');
         }
 
         return false;
